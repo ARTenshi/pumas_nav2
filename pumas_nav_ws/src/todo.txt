@@ -1,0 +1,21 @@
+***is most highest tier.
+
+general
+  ***mvn_pln state: wait_for_rotate -> simple_move rotation&backward
+  ***follow_human
+  **augment_grid, online -> point_obstacle
+  **python client
+  *bypass_map -> cartographer
+  *hardware -> led
+
+ry0hei-kobayashi
+ ***motion_synth
+ **mvn_pln
+   backward
+   motion_synth
+ *hardware
+   arm, head -> set start pose from launch file
+
+
+
+
