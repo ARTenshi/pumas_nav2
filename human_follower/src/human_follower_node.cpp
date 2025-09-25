@@ -20,7 +20,6 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 // Action messages (used less directly in ROS 2; here for compatibility)
-#include "action_msgs/msg/goal_status.hpp"
 
 // Standard
 #include <iostream>
