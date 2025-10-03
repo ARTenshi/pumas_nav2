@@ -137,7 +137,8 @@ Additionally, in the package:
       pkg="potential_fields"  
       exec="potential_fields_node"
       namespace="$(var ns_prefix)"
-      output="screen">
+      output="screen"
+      respawn="true">
   <param name="use_namespace" value="$(var use_namespace)"/>
 ```
 
@@ -151,6 +152,28 @@ modify the following parameters accordingly:
   <param name="cloud_pot_fields_k_rej" value="0.20"/>
 ```
 these parameters indicate the obstacle's distance and rejective force during navigation (too low means that the robot won't avoid obstacles, and too high means that the robot will avoid obstacles too far from it -- these two extreme cases might cause undesired behaviours).
+
+Moreover, in the package:
+
+```xml
+<node name="map_augmenter" 
+      pkg="map_augmenter" 
+      exec="map_augmenter_node"
+      namespace="$(var ns_prefix)"
+      output="screen"
+      respawn="true">
+  <param name="use_namespace" value="$(var use_namespace)"/>
+```
+
+modify the parameters:
+
+```xml
+<param name="decay_factor" value="20"/>    
+<param name="inflation_radius" value="0.22"/>
+<param name="cost_radius" value="0.25"/>
+```
+
+that best suits your navigation requirements, where _decay factor_ refers to the time that the temporal obstacles remain in the map (in time cicles), the _inflation radious_ is the additional size around those obstacles (in meters), and the _cost radius_ is the relevance of the objects for path planning.
 
 ## Future Work
 

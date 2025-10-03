@@ -123,13 +123,18 @@ public:
             make_name("/navigation/potential_fields/collision_risk"), 
             rclcpp::QoS(10).transient_local());
 
+        pub_pot_fields_rejection_ = this->create_publisher<geometry_msgs::msg::Vector3>(
+            make_name("/navigation/potential_fields/pf_rejection_force"), 
+            rclcpp::QoS(10).transient_local());
+        
         pub_pot_fields_markers_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             make_name("/navigation/potential_fields/pot_field_markers"), 
             rclcpp::QoS(10).transient_local());
 
-        pub_pot_fields_rejection_ = this->create_publisher<geometry_msgs::msg::Vector3>(
-            make_name("/navigation/potential_fields/pf_rejection_force"), 
+        pub_detect_area_markers_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
+            make_name("/navigation/potential_fields/detect_area_marker"), 
             rclcpp::QoS(10).transient_local());
+
 
 
         //############
@@ -211,6 +216,7 @@ private:
     // Publishers
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr                  pub_collision_risk_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_pot_fields_markers_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_detect_area_markers_;
     rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr          pub_pot_fields_rejection_;
 
 
@@ -692,6 +698,40 @@ private:
         }
     }
 
+   visualization_msgs::msg::Marker createDetectAreaMarker(
+            const std::string &frame_name,
+            const std::string &ns,
+            int id,
+            double min_x, double max_x,
+            double min_y, double max_y,
+            double min_z, double max_z,
+            float r, float g, float b, float a)
+    {
+        visualization_msgs::msg::Marker marker;
+        marker.header.frame_id = frame_name;
+        marker.header.stamp = rclcpp::Time(0);
+        // marker.header.stamp = this->get_clock()->now();
+        marker.ns = ns;
+        marker.id = id;
+        marker.type = visualization_msgs::msg::Marker::CUBE;
+        marker.action = visualization_msgs::msg::Marker::ADD;
+        marker.pose.position.x = (max_x + min_x) / 2.0;
+        marker.pose.position.y = (max_y + min_y) / 2.0;
+        marker.pose.position.z = (max_z + min_z) / 2.0;
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.y = 0.0;
+        marker.pose.orientation.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = max_x - min_x;
+        marker.scale.y = max_y - min_y;
+        marker.scale.z = max_z - min_z;
+        marker.color.a = a;
+        marker.color.r = r;
+        marker.color.g = g;
+        marker.color.b = b;
+        return marker;
+    }
+
     visualization_msgs::msg::MarkerArray get_force_arrow_markers(
         const geometry_msgs::msg::Vector3& f1,
         const geometry_msgs::msg::Vector3& f2)
@@ -700,7 +740,8 @@ private:
         visualization_msgs::msg::Marker marker;
 
         marker.header.frame_id = base_link_name_;
-        marker.header.stamp = this->get_clock()->now();
+        marker.header.stamp = rclcpp::Time(0);
+        //marker.header.stamp = this->get_clock()->now();
         marker.ns = "pot_fields";
         marker.type = visualization_msgs::msg::Marker::ARROW;
         marker.action = visualization_msgs::msg::Marker::ADD;
@@ -782,6 +823,14 @@ private:
 
                 pub_pot_fields_rejection_->publish(msg_rejection_force);
                 pub_pot_fields_markers_->publish(get_force_arrow_markers(rejection_force_lidar_, rejection_force_cloud_));
+
+                // pub detect area visualizer
+                visualization_msgs::msg::MarkerArray detect_markers;
+                auto laser_marker = createDetectAreaMarker(base_link_name_, "detect_area_laser", 0, laser_min_x_, laser_max_x_, laser_min_y_, laser_max_y_, laser_min_z_, laser_max_z_, 1.0, 0.0, 0.0, 0.5);
+                auto cloud_marker = createDetectAreaMarker(base_link_name_, "detect_area_cloud", 1, cloud_min_x_, cloud_max_x_, cloud_min_y_, cloud_max_y_, cloud_min_z_, cloud_max_z_, 0.0, 1.0, 0.0, 0.5);
+                detect_markers.markers.push_back(laser_marker);
+                detect_markers.markers.push_back(cloud_marker);
+                pub_detect_area_markers_->publish(detect_markers);
             }
 
             // Publish collision risk status

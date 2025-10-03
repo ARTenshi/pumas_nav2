@@ -10,14 +10,13 @@
   <arg name="pose_topic" default="/pose"/>
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
-  <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/rectified_points"/>
-  <arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points"/>
+  <arg name="point_cloud_topic" default="/hma_pcl_reconst/depth_registered/points"/>
+  <!--arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points"/-->
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor"/>
 
   <arg name="use_lidar" default="True"/>
   <arg name="use_sonars" default="False"/>
   <arg name="use_point_cloud" default="True"/>
-  <arg name="use_point_cloud2" default="False"/>
   <arg name="use_bumper" default="False"/>
   <arg name="use_pot_fields" default="True"/>
 
@@ -26,7 +25,7 @@
   <arg name="cloud_points_threshold" default="100"/>
   <arg name="lidar_points_threshold" default="20"/>
 
-  <arg name="mvn_pln_patience" default="True"/>
+  <arg name="mvn_pln_patience" default="False"/>
 
   <arg name="laser_min_x" default="0.17"/>
   <arg name="laser_max_x" default="0.50"/>
@@ -38,7 +37,7 @@
   <arg name="cloud_max_x" default="0.80"/>
   <arg name="cloud_min_y" default="-0.30"/>
   <arg name="cloud_max_y" default="0.30"/>
-  <arg name="cloud_min_z" default="0.01"/>
+  <arg name="cloud_min_z" default="0.07"/>
   <arg name="cloud_max_z" default="1.20"/>
 
   <!-- Map servers -->
@@ -88,12 +87,14 @@
   </node>
 
   <!-- Localization  -->
+  <!-- KILL AMCL localization if necessary -->
+  <!--executable cmd="ros2 node kill amcl"/-->
+
   <!-- Start EMCL2 localization or your own navigation -->
-  <node name="emcl2"
+  <!--node name="emcl2"
         pkg="emcl2"
         exec="emcl2_node"
         output="log"
-        args="--ros-args --log-level WARN"
         respawn="true">
     <param name="num_particles" value="1000"/>
 
@@ -108,7 +109,7 @@
     <remap from="cmd_vel" to="$(var cmd_vel_topic)"/>
     <remap from="mcl_pose" to="$(var pose_topic)"/>
     <remap from="map" to="/map"/>
-  </node>
+  </node-->
 
   <!-- Map Augmenters -->
   <node name="map_augmenter" 
@@ -118,7 +119,6 @@
         respawn="true">
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
-    <param name="point_cloud_topic2" value="$(var point_cloud_topic2)"/>
     <param name="static_map_server" value="/static_map_server/map"/>
     <param name="prohibition_map_server" value="/prohibition_map"/>
     
@@ -127,13 +127,12 @@
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_sonars" value="$(var use_sonars)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-    <param name="use_point_cloud2" value="$(var use_point_cloud2)"/>
     
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
     
-    <param name="decay_factor" value="20"/>    
-    <param name="inflation_radius" value="0.22"/>
-    <param name="cost_radius" value="0.25"/> 
+    <param name="decay_factor" value="5"/>    
+    <param name="inflation_radius" value="0.10"/>
+    <param name="cost_radius" value="0.12"/> 
 
     <param name="use_online" value="False"/>
 
@@ -244,9 +243,9 @@
         exec="arm_node"
         output="screen"
         respawn="true">
-        <param name="torso_default_pose" value="0.15"/>
+        <param name="torso_default_pose" value="0.0"/>
         <!--arm_flex, arm_roll, wrist_flex, wrist_roll-->
-        <param name="arm_default_pose" value="[-0.26, -1.57, -1.57, 0.0]"/>
+        <param name="arm_default_pose" value="[-0.16, -1.57, -1.57, 0.0]"/>
   </node>
 
   <node name="head_controller"
@@ -256,7 +255,7 @@
         respawn="true">
         <param name="pan_min" value="-3.14" />
         <param name="pan_max" value="1.74" />
-        <param name="tilt_min" value="-0.9" />
+        <param name="tilt_min" value="-1.0" />
         <param name="tilt_max" value="0.47" />
   </node>
 

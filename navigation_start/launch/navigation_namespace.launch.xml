@@ -17,7 +17,6 @@
   <arg name="cmd_vel_topic" default="/$(var namespace)/omni_base_controller/cmd_vel" if="$(var use_namespace)"/>
   <arg name="laser_scan_topic" default="/$(var namespace)/scan" if="$(var use_namespace)"/>
   <arg name="point_cloud_topic" default="/$(var namespace)/head_rgbd_sensor/depth_registered/rectified_points" if="$(var use_namespace)"/>
-  <arg name="point_cloud_topic2" default="/$(var namespace)/head_rgbd_sensor/depth_registered/rectified_points" if="$(var use_namespace)"/>
   <arg name="bumper_f_topic" default="/$(var namespace)/base_f_bumper_sensor" if="$(var use_namespace)"/>
   <arg name="base_link_name" default="/$(var namespace)/base_link" if="$(var use_namespace)"/>
   <arg name="odom_topic" default="/$(var namespace)/odom" if="$(var use_namespace)"/>
@@ -27,7 +26,6 @@
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel" unless="$(var use_namespace)"/>
   <arg name="laser_scan_topic" default="/scan" unless="$(var use_namespace)"/>
   <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/rectified_points" unless="$(var use_namespace)"/>
-  <arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points" unless="$(var use_namespace)"/>
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor" unless="$(var use_namespace)"/>
   <arg name="base_link_name" default="base_link" unless="$(var use_namespace)"/>
   <arg name="odom_topic" default="odom" unless="$(var use_namespace)"/>
@@ -36,7 +34,6 @@
   <arg name="use_lidar" default="True"/>
   <arg name="use_sonars" default="False"/>
   <arg name="use_point_cloud" default="True"/>
-  <arg name="use_point_cloud2" default="False"/>
   <arg name="use_bumper" default="False"/>
   <arg name="use_pot_fields" default="True"/>
 
@@ -144,7 +141,6 @@
     
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
-    <param name="point_cloud_topic2" value="$(var point_cloud_topic2)"/>
     <param name="static_map_server" value="/static_map_server/map"/>
     <param name="prohibition_map_server" value="/prohibition_map"/>
     
@@ -153,7 +149,6 @@
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_sonars" value="$(var use_sonars)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-    <param name="use_point_cloud2" value="$(var use_point_cloud2)"/>
     
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
     

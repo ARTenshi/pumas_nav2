@@ -161,7 +161,8 @@ public:
         get_first_maps();
 
         processing_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), // 100 ms = 10 Hz
+            // std::chrono::milliseconds(100), // 100 ms = 10 Hz
+            std::chrono::milliseconds(30), // 30 Hz
             std::bind(&MapAugmenterNode::map_augmenter_processing, this));
 
         RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> MapAugmenterNode is ready.");
