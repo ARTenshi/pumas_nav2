@@ -197,7 +197,7 @@ private:
     void wait_for_transforms(const std::string &target_frame, const std::string &source_frame)
     {
         RCLCPP_INFO(this->get_logger(),
-                    "SimpleMove.-> Waiting for transform from '%s' to '%s'...", source_frame.c_str(), target_frame.c_str());
+                    "LegFinder.-> Waiting for transform from '%s' to '%s'...", source_frame.c_str(), target_frame.c_str());
 
         rclcpp::Time start_time = this->now();
         rclcpp::Duration timeout = rclcpp::Duration::from_seconds(10.0); 
@@ -216,7 +216,7 @@ private:
                 break;
             } catch (const tf2::TransformException& ex) {
                 RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
-                                    "SimpleMove.-> Still waiting for transform: %s", ex.what());
+                                    "LegFinder.-> Still waiting for transform: %s", ex.what());
             }
 
             rclcpp::sleep_for(std::chrono::milliseconds(200));
@@ -224,11 +224,11 @@ private:
 
         if (!transform_ok) {
             RCLCPP_WARN(this->get_logger(),
-                        "SimpleMove.-> Timeout while waiting for transform from '%s' to '%s'.",
+                        "LegFinder.-> Timeout while waiting for transform from '%s' to '%s'.",
                         source_frame.c_str(), target_frame.c_str());
         } else {
             RCLCPP_INFO(this->get_logger(),
-                        "SimpleMove.-> Transform from '%s' to '%s' is now available.",
+                        "LegFinder.-> Transform from '%s' to '%s' is now available.",
                         source_frame.c_str(), target_frame.c_str());
         }
     }
@@ -245,7 +245,7 @@ private:
         find_leg_hypothesis(*msg, legs_x, legs_y);
         if(show_hypothesis_)
         {
-            std::cout << "Num of Found legs: " << legs_x.size() << "  " << legs_y.size() << std::endl;
+            RCLCPP_INFO(this->get_logger(), "LegFinder.-> Num of Found legs: %zu  %zu", legs_x.size(), legs_y.size());
             pub_legs_hypothesis_->publish(get_hypothesis_marker(legs_x, legs_y));
         }
 
