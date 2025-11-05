@@ -21,6 +21,7 @@ find_package(actionlib_msgs REQUIRED) # will be delete
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 find_package(rcl_interfaces REQUIRED)
@@ -34,11 +35,6 @@ add_executable(human_follower_node
     src/human_follower_node.cpp
 )
 
-target_include_directories(leg_finder_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-
 ament_target_dependencies(leg_finder_node
     rclcpp
 
@@ -49,7 +45,7 @@ ament_target_dependencies(leg_finder_node
     tf2
     tf2_ros
     tf2_eigen
-
+    
     rcl_interfaces
     visualization_msgs
 
@@ -63,11 +59,12 @@ ament_target_dependencies(human_follower_node
     nav_msgs
     sensor_msgs 
     geometry_msgs
-    actionlib_msgs # will be delete
+    actionlib_msgs
 
     tf2
     tf2_ros
-
+    tf2_geometry_msgs
+    
     rcl_interfaces
 )
 
