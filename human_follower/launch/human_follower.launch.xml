@@ -7,6 +7,7 @@
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
   <arg name="laser_scan_frame" default="base_range_sensor_link"/>
+  <arg name="base_link_frame" default="base_footprint"/>
   <arg name="legs_pose_topic" default="/hri/leg_finder/leg_pose"/>
   <arg name="head_topic" default="/hardware/head/goal_pose"/>
 

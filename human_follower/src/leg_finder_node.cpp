@@ -119,8 +119,6 @@ private:
     float last_legs_pose_x_ = 0;
     float last_legs_pose_y_ = 0;
 
-    std::string base_link_name_ = "base_link";
-
     std::vector<float> legs_x_filter_input_;
     std::vector<float> legs_x_filter_output_;
     std::vector<float> legs_y_filter_input_;
@@ -273,7 +271,7 @@ private:
         }
         else if(legs_found_){
             geometry_msgs::msg::PointStamped filtered_legs;
-            filtered_legs.header.frame_id = base_link_name_;
+            filtered_legs.header.frame_id = base_link_frame_;
             filtered_legs.point.z = 0.3;
 
             bool fobst_in_front = false;
@@ -464,7 +462,7 @@ private:
         geometry_msgs::msg::TransformStamped transform_stamped;
         try {
             transform_stamped = tf_buffer_.lookupTransform(
-                base_link_name_,  // target frame
+                base_link_frame_,  // target frame
                 laser_scan_frame_,  // source frame
                 tf2::TimePointZero);
         } catch (const tf2::TransformException &ex) {
@@ -595,7 +593,7 @@ private:
     {
         visualization_msgs::msg::Marker marker_legs;
         marker_legs.header.stamp = get_clock()->now();
-        marker_legs.header.frame_id = base_link_name_;
+        marker_legs.header.frame_id = base_link_frame_;
         marker_legs.ns = "leg_finder";
         marker_legs.id = 0;
         marker_legs.type = visualization_msgs::msg::Marker::SPHERE_LIST;
