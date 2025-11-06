@@ -79,11 +79,11 @@ public:
 
         // Publishers
         pub_legs_hypothesis_ = this->create_publisher<visualization_msgs::msg::Marker>(
-            "/hri/leg_finder/hypothesis", 1);
+            "/hri/leg_finder/hypothesis", rclcpp::SensorDataQoS());
         pub_legs_pose_ = this->create_publisher<geometry_msgs::msg::PointStamped>(
-            "/hri/leg_finder/leg_pose", 1);
+            "/hri/leg_finder/leg_pose", rclcpp::SensorDataQoS());
         pub_legs_found_ = this->create_publisher<std_msgs::msg::Bool>(
-            "/hri/leg_finder/legs_found", 1);
+            "/hri/leg_finder/legs_found", rclcpp::SensorDataQoS());
 
         // Initialize filter input/output vectors
         legs_x_filter_input_.resize(4, 0);
