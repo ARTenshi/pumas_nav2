@@ -80,7 +80,7 @@ public:
         this->get_parameter("cmd_vel_topic",      cmd_vel_topic_);
         this->get_parameter("head_topic",         head_topic_);
         
-        this->get_parameter("base_link_name",     base_link_name_);
+        this->get_parameter("base_link_frame",     base_link_frame_);
 
         // Setup parameter change callback
         param_callback_handle_ = this->add_on_set_parameters_callback(
@@ -143,7 +143,7 @@ private:
     std::string cmd_vel_topic_   = "/cmd_vel";
     std::string head_topic_      = "/hardware/head/goal_pose";
     
-    std::string base_link_name_  = "base_footprint";
+    std::string base_link_frame_  = "base_footprint";
 
     bool  new_legs_pose_ = false;
     bool  enable_        = false;
@@ -198,7 +198,7 @@ private:
             else if (param.get_name() == "legs_pose_topic")   legs_pose_topic_  = param.as_string();
             else if (param.get_name() == "cmd_vel_topic")     cmd_vel_topic_    = param.as_string();
             else if (param.get_name() == "head_topic")        head_topic_       = param.as_string();
-            else if (param.get_name() == "base_link_name")    base_link_name_   = param.as_string();
+            else if (param.get_name() == "base_link_name")    base_link_frame_   = param.as_string();
 
             else {
                 result.successful = false;
@@ -321,7 +321,7 @@ private:
 
             // Transform to base_link
             geometry_msgs::msg::TransformStamped tf = 
-                tf_buffer_.lookupTransform(base_link_name_, frame_id, tf2::TimePointZero);
+                tf_buffer_.lookupTransform(base_link_frame_, frame_id, tf2::TimePointZero);
             
             tf2::doTransform(p_in, p_out, tf);
 
