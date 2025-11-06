@@ -62,7 +62,7 @@ public:
         this->declare_parameter<std::string>("cmd_vel_topic",   "/cmd_vel");
         this->declare_parameter<std::string>("head_topic",      "/hardware/head/goal_pose");
         
-        this->declare_parameter<std::string>("base_link_name",  "base_footprint");
+        this->declare_parameter<std::string>("base_link_frame",  "base_footprint");
 
         // Initialize internal variables from declared parameters
         this->get_parameter("use_namespace",      use_namespace_);
@@ -198,7 +198,7 @@ private:
             else if (param.get_name() == "legs_pose_topic")   legs_pose_topic_  = param.as_string();
             else if (param.get_name() == "cmd_vel_topic")     cmd_vel_topic_    = param.as_string();
             else if (param.get_name() == "head_topic")        head_topic_       = param.as_string();
-            else if (param.get_name() == "base_link_name")    base_link_frame_   = param.as_string();
+            else if (param.get_name() == "base_link_frame")    base_link_frame_   = param.as_string();
 
             else {
                 result.successful = false;
