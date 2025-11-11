@@ -25,11 +25,18 @@
 #define TWO_LEGS_THICK  0.25
 #define TWO_LEGS_NEAR  0.0022201
 #define TWO_LEGS_FAR  0.25
+
 #define IS_LEG_THRESHOLD 0.5
+//Constants to check if there are legs in front of the robot
 #define IN_FRONT_MIN_X  0.25
 #define IN_FRONT_MAX_X  1.5
 #define IN_FRONT_MIN_Y -0.5
 #define IN_FRONT_MAX_Y  0.5
+
+//BUTTERWORTH FILTER A Ó B EN X O Y
+//cutoff frequency X: 0.7
+//                 Y: 0.2
+//lowpass filter
 #define BFA0X 1.0
 #define BFA1X -1.760041880343169
 #define BFA2X 1.182893262037831
@@ -38,6 +45,7 @@
 #define BFB1X 0.054296799022543
 #define BFB2X 0.054296799022543
 #define BFB3X 0.018098933007514
+
 #define BFA0Y 1.0
 #define BFA1Y -1.760041880343169
 #define BFA2Y 1.182893262037831
