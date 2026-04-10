@@ -498,7 +498,7 @@ private:
         double &rejection_force_x,
         double &rejection_force_y)
     {
-        if (current_speed_linear_ <= 0.0 && current_speed_angular_ == 0 && !debug_) {
+        if (current_speed_linear_ <= 0.0 && !debug_) {
             return false;
         }
 
@@ -568,7 +568,7 @@ private:
         double& rejection_force_x,
         double& rejection_force_y)
     {
-        if (current_speed_linear_ <= 0.0 && current_speed_angular_ == 0 && !(debug_||show_img_)) {
+        if (current_speed_linear_ <= 0.0 && !(debug_||show_img_)) {
             return false;
         }
 
