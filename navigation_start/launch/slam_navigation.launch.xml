@@ -138,6 +138,9 @@
     <param name="control_alpha" value="0.2"/>
     <param name="control_beta" value="0.8"/>
 
+    <param name="fine_dist_tolerance" value="0.01"/>
+    <param name="coarse_dist_tolerance" value="0.025"/>
+
     <param name="move_head" value="True"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
 

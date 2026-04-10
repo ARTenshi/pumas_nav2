@@ -1,1 +1,36 @@
+# Environment/secrets
 .env
+
+# Claude AI files
+.claude/
+CLAUDE.md
+
+# ROS 2 build artifacts
+build/
+install/
+log/
+devel/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.eggs/
+*.egg-info/
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.make
+
+# IDE/Editor configs
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

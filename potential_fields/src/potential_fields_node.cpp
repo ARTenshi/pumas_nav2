@@ -568,7 +568,7 @@ private:
         double& rejection_force_x,
         double& rejection_force_y)
     {
-        if (current_speed_linear_ <= 0.0 && !(debug_||show_img_)) {
+        if (current_speed_linear_ <= 0.0 && current_speed_angular_ == 0 && !(debug_||show_img_)) {
             return false;
         }
 
@@ -656,7 +656,7 @@ private:
     {
         float robot_x, robot_y, robot_a;
         get_robot_position_wrt_map(robot_x, robot_y, robot_a);
-        float dist_to_goal = sqrt(pow(global_goal_x_ - robot_x, 2) + pow(global_goal_x_ - robot_x, 2));
+        float dist_to_goal = sqrt(pow(global_goal_x_ - robot_x, 2) + pow(global_goal_y_ - robot_y, 2));
         if(dist_to_goal < max_x)
             return dist_to_goal;
         return max_x;

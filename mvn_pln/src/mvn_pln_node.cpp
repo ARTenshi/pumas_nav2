@@ -430,13 +430,27 @@ private:
 
     void callback_simple_goal(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
-        try 
+        try
         {
             std::cout << "MotionPlanner.-> New goal received." << std::endl;
-            global_goal_ = msg->pose;
+            if (msg->header.frame_id.empty() || msg->header.frame_id == "map")
+            {
+                global_goal_ = msg->pose;
+            }
+            else
+            {
+                geometry_msgs::msg::PoseStamped goal_in_map;
+                tf_buffer_.transform(*msg, goal_in_map, "map", tf2::durationFromSec(1.0));
+                global_goal_ = goal_in_map.pose;
+            }
             new_global_goal_ = true;
-        } 
-        catch (const std::exception &e) 
+        }
+        catch (const tf2::TransformException &e)
+        {
+            RCLCPP_ERROR(this->get_logger(), "MotionPlanner.-> Could not transform goal from '%s' to 'map': %s",
+                         msg->header.frame_id.c_str(), e.what());
+        }
+        catch (const std::exception &e)
         {
             RCLCPP_ERROR(this->get_logger(), "MotionPlanner.-> Error processing callback_simple_goal: %s", e.what());
         }
