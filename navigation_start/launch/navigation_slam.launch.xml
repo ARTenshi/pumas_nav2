@@ -6,7 +6,6 @@
   <arg name="prohibition_map_file" default="$(find-pkg-share navigation_start)/maps/prohibition_maps/blank/map.yaml"/>
 
   <arg name="odom_topic" default="/odom"/>
-  <arg name="pose_topic" default="/pose"/>
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
   <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/rectified_points"/>
@@ -23,7 +22,7 @@
   <arg name="cloud_points_threshold" default="100"/>
   <arg name="lidar_points_threshold" default="20"/>
 
-  <arg name="mvn_pln_patience" default="False"/>
+  <arg name="mvn_pln_patience" default="True"/>
 
   <arg name="laser_min_x" default="0.17"/>
   <arg name="laser_max_x" default="0.50"/>
@@ -38,11 +37,29 @@
   <arg name="cloud_min_z" default="0.01"/>
   <arg name="cloud_max_z" default="1.20"/>
 
-  <!-- Map servers -->
-  <node name="prohibition_map_server" 
-        pkg="nav2_map_server" 
-        exec="map_server" 
-        output="screen">
+  <!-- SLAM Toolbox (online async): builds the map and provides map->odom TF -->
+  <node name="slam_toolbox"
+        pkg="slam_toolbox"
+        exec="async_slam_toolbox_node"
+        output="screen"
+        respawn="true">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="scan_topic" value="$(var laser_scan_topic)"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/>
+    <param name="base_frame" value="base_link"/>
+    <param name="mode" value="mapping"/>
+    <param name="map_update_interval" value="1.0"/>
+    <param name="resolution" value="0.05"/>
+    <param name="max_laser_range" value="20.0"/>
+  </node>
+
+  <!-- Prohibition map server -->
+  <node name="prohibition_map_server"
+        pkg="nav2_map_server"
+        exec="map_server"
+        output="screen"
+        respawn="true">
     <param name="yaml_filename" value="$(var prohibition_map_file)"/>
     <remap from="/map" to="/fixed_prohibition_layer_map"/>
   </node>
@@ -50,17 +67,19 @@
   <node name="lifecycle_manager_map"
         pkg="nav2_lifecycle_manager"
         exec="lifecycle_manager"
-        output="screen">
+        output="screen"
+        respawn="true">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="autostart" value="true"/>
     <param name="node_names" value="['prohibition_map_server']"/>
   </node>
 
   <!-- Map Enhancer -->
-  <node name="map_enhancer" 
-        pkg="augment_gridmap_online" 
-        exec="augment_gridmap_online_node" 
-        output="screen">
+  <node name="map_enhancer"
+        pkg="augment_gridmap_online"
+        exec="augment_gridmap_online_node"
+        output="screen"
+        respawn="true">
 
     <remap from="point_obstacle" to="/clicked_point"/>
     <param name="obstacle_radius" value="0.05"/>
@@ -72,28 +91,28 @@
   </node>
 
   <!-- Map Augmenters -->
-  <node name="map_augmenter" 
-        pkg="map_augmenter" 
-        exec="map_augmenter_node" 
-        output="screen">
+  <node name="map_augmenter"
+        pkg="map_augmenter"
+        exec="map_augmenter_node"
+        output="screen"
+        respawn="true">
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
-    <param name="static_map_server" value="/static_map"/>
+    <param name="static_map_server" value="/slam_toolbox/dynamic_map"/>
     <param name="prohibition_map_server" value="/prohibition_map"/>
-    
+    <param name="use_online" value="True"/>
+
     <remap from="point_obstacle" to="/clicked_point"/>
 
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_sonars" value="$(var use_sonars)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-    
-    <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
-    
-    <param name="decay_factor" value="20"/>    
-    <param name="inflation_radius" value="0.22"/>
-    <param name="cost_radius" value="0.25"/> 
 
-    <param name="use_online" value="True"/>
+    <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
+
+    <param name="decay_factor" value="20"/>
+    <param name="inflation_radius" value="0.22"/>
+    <param name="cost_radius" value="0.25"/>
 
     <param name="laser_max_x" value="$(var laser_max_x)"/>
     <param name="laser_min_x" value="$(var laser_min_x)"/>
@@ -111,35 +130,28 @@
 
   </node>
 
-  <!-- Map Server Bypass -->
-  <node name="map_server_bypass" 
-        pkg="map_server_bypass" 
-        exec="map_server_bypass_node" 
-        output="screen">
-    <param name="occupied_threshold" value="80"/>
-  </node>
-
   <!-- Path Planner -->
-  <node name="path_planner" 
-        pkg="path_planner" 
-        exec="path_planner_node" 
+  <node name="path_planner"
+        pkg="path_planner"
+        exec="path_planner_node"
         output="screen"
         respawn="true">
     <param name="diagonal_paths" value="True"/>
   </node>
 
-  <node name="simple_move"  
-        pkg="simple_move"  
-        exec="simple_move_node"  
-        output="screen">
+  <node name="simple_move"
+        pkg="simple_move"
+        exec="simple_move_node"
+        output="screen"
+        respawn="true">
     <param name="max_linear_speed" value="0.8"/>
     <param name="max_angular_speed" value="1.25"/>
 
     <param name="control_alpha" value="0.2"/>
     <param name="control_beta" value="0.8"/>
 
-    <param name="fine_dist_tolerance" value="0.01"/>
-    <param name="coarse_dist_tolerance" value="0.025"/>
+    <param name="fine_dist_tolerance" value="0.05"/>
+    <param name="coarse_dist_tolerance" value="0.10"/>
 
     <param name="move_head" value="True"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
@@ -148,12 +160,13 @@
   </node>
 
   <!-- Potential Fields -->
-  <node name="potential_fields"  
-        pkg="potential_fields"  
-        exec="potential_fields_node"  
-        output="screen">
+  <node name="potential_fields"
+        pkg="potential_fields"
+        exec="potential_fields_node"
+        output="screen"
+        respawn="true">
     <param name="debug" value="False"/>
-    <param name="show_image" value="True"/> 
+    <param name="show_image" value="True"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
 
     <param name="use_lidar" value="$(var use_lidar)"/>
@@ -192,13 +205,15 @@
   <node name="publish_enable"
         pkg="potential_fields"
         exec="publish_enable.py"
-        output="screen"/>
+        output="screen"
+        respawn="true"/>
 
   <!-- Motion Planner -->
-  <node name="mvn_pln"  
-        pkg="mvn_pln"  
-        exec="mvn_pln_node"  
-        output="screen">
+  <node name="mvn_pln"
+        pkg="mvn_pln"
+        exec="mvn_pln_node"
+        output="screen"
+        respawn="true">
     <remap from="/nav_control/goal" to="/move_base_simple/goal"/>
     <param name="patience" value="$(var mvn_pln_patience)"/>
   </node>
@@ -207,7 +222,8 @@
   <node name="arm_controller"
         pkg="hardware_controller"
         exec="arm_node"
-        output="screen">
+        output="screen"
+        respawn="true">
         <param name="torso_default_pose" value="0.15"/>
         <!--arm_flex, arm_roll, wrist_flex, wrist_roll-->
         <param name="arm_default_pose" value="[-0.26, -1.57, -1.57, 0.0]"/>
@@ -216,7 +232,8 @@
   <node name="head_controller"
         pkg="hardware_controller"
         exec="head_node"
-        output="screen">
+        output="screen"
+        respawn="true">
         <param name="pan_min" value="-3.14" />
         <param name="pan_max" value="1.74" />
         <param name="tilt_min" value="-0.9" />
