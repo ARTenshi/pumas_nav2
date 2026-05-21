@@ -36,7 +36,7 @@ bool PathPlanner::AStar(const nav_msgs::msg::OccupancyGrid &map,
     
     int MAX_GOAL_UPDATE = 16; //points on circle
     double angle_increment = 2 * M_PI / (MAX_GOAL_UPDATE - 1);
-    while (map.data[idx_goal] != 0 or loop_count < 4)
+    while (map.data[idx_goal] > 0 or loop_count < 4)
     {
 
         double angle = count * angle_increment;
@@ -54,12 +54,12 @@ bool PathPlanner::AStar(const nav_msgs::msg::OccupancyGrid &map,
     }
 
 
-    if(map.data[idx_goal] != 0)
+    if(map.data[idx_goal] > 0)
     {
         std::cout << "PathPlanner.->Goal point is inside non-free space!!!!" << std::endl;
         return false;
     }
-    if(map.data[idx_start] != 0)
+    if(map.data[idx_start] > 0)
     {
         std::cout << "PathPlanner.->Start point is inside non-free space!!!!" << std::endl;
         return false;
@@ -104,7 +104,7 @@ bool PathPlanner::AStar(const nav_msgs::msg::OccupancyGrid &map,
            
             for(size_t i=0; i < node_neighbors.size(); i++)
             {
-                if(map.data[node_neighbors[i]] != 0 || nodes[node_neighbors[i]].in_closed_list)
+                if(map.data[node_neighbors[i]] > 0 || nodes[node_neighbors[i]].in_closed_list)
                     continue;
            
                 Node* neighbor = &nodes[node_neighbors[i]];

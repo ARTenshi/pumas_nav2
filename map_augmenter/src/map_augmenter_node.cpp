@@ -445,7 +445,7 @@ private:
     {
         if (is_static_map_ && is_prohibition_map_)
         {
-            RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Updating static map with prohibition layer and static cost map...");
+            RCLCPP_DEBUG(this->get_logger(), "MapAugmenter.-> Updating static map with prohibition layer and static cost map...");
             
             static_map_ = merge_maps(static_map_, prohibition_map_);
             static_map_ = inflate_map(static_map_, inflation_radius_);
@@ -457,7 +457,7 @@ private:
             
             is_static_map_ = false;
             is_prohibition_map_ = false;
-            RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Statics maps have been updated.");
+            RCLCPP_DEBUG(this->get_logger(), "MapAugmenter.-> Statics maps have been updated.");
         }
     }
 
@@ -541,7 +541,7 @@ private:
     {
         if (a.info.width != b.info.width || a.info.height != b.info.height)
         {
-            RCLCPP_WARN(this->get_logger(), "MapAugmenter.-> WARNING!!! Cannot merge maps of different sizes!");
+            RCLCPP_DEBUG(this->get_logger(), "MapAugmenter.-> WARNING!!! Cannot merge maps of different sizes!");
             return a;
         }
 
