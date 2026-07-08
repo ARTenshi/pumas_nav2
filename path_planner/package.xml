@@ -18,8 +18,10 @@
   <depend>sensor_msgs_py</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
 
   <depend>rcl_interfaces</depend>
+  <depend>pumas_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

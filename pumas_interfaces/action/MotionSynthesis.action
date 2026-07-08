@@ -1,0 +1,18 @@
+# Goal
+geometry_msgs/Pose2D goal_location
+bool apply_start_pose
+pumas_interfaces/Joints start_pose
+bool apply_goal_pose
+pumas_interfaces/Joints goal_pose
+string[] exec_from_first
+geometry_msgs/Point goal_tolerance
+# time_from_start (sec) for arm/head trajectory commands during this motion
+float32 motion_execution_time
+
+---
+# Result
+bool result
+---
+# Feedback
+float32 feedback
+

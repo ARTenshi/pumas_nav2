@@ -13,14 +13,19 @@
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
 
+  <!-- Used at runtime to resolve a package share dir by name (rospkg equivalent). -->
+  <depend>ament_index_cpp</depend>
+
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>visualization_msgs</depend>
 
   <depend>std_srvs</depend>
-  
+
   <depend>rcl_interfaces</depend>
+
+  <depend>yaml-cpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

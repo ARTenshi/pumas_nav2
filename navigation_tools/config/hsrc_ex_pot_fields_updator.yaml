@@ -1,0 +1,6 @@
+pot_fields_updator:
+  ros__parameters:
+    human_follow:
+      laser_pot_fields_d0: 0.50
+      laser_pot_fields_k_rej: 1.00
+      laser_max_x: 0.70

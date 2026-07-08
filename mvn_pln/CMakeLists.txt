@@ -23,6 +23,8 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
+find_package(pumas_interfaces REQUIRED)
+
 find_package(rcl_interfaces REQUIRED)
 
 # C++ section
@@ -44,6 +46,8 @@ ament_target_dependencies(mvn_pln_node
     tf2
     tf2_ros
     tf2_geometry_msgs
+
+    pumas_interfaces
 
     rcl_interfaces
 )

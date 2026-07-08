@@ -13,6 +13,8 @@
 
 #include <actionlib_msgs/msg/goal_status.hpp>
 
+#include <pumas_interfaces/msg/motion_pose.hpp>
+
 #include <string>
 #include <cmath>
 
@@ -61,14 +63,22 @@ public:
 
     // Subscribers
     sub_arm_goal_pose_ = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        make_name("/hardware/arm/goal_pose"), 
+        make_name("/hardware/arm/goal_pose"),
         rclcpp::QoS(10).reliable(),
         std::bind(&ArmController::armGoalPoseCallback, this, std::placeholders::_1));
 
     sub_torso_goal_pose_ = this->create_subscription<std_msgs::msg::Float32>(
-        make_name("/hardware/torso/goal_pose"), 
+        make_name("/hardware/torso/goal_pose"),
         rclcpp::QoS(10).reliable(),
         std::bind(&ArmController::torsoGoalPoseCallback, this, std::placeholders::_1));
+
+    // motion_synth publishes a MotionPose (full Joints + motion_execution_time)
+    // on a single topic shared with head_controller. We pick up the lift/arm
+    // fields and ignore the head fields.
+    sub_motion_pose_ = this->create_subscription<pumas_interfaces::msg::MotionPose>(
+        "/hardware/motion_pose",
+        rclcpp::QoS(10).reliable(),
+        std::bind(&ArmController::motionPoseCallback, this, std::placeholders::_1));
 
     sub_arm_state_ = this->create_subscription<control_msgs::msg::JointTrajectoryControllerState>(
         arm_state_topic_, 
@@ -103,7 +113,14 @@ private:
 
   rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr   sub_arm_goal_pose_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr             sub_torso_goal_pose_;
+  rclcpp::Subscription<pumas_interfaces::msg::MotionPose>::SharedPtr  sub_motion_pose_;
   rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr sub_arm_state_;
+
+  // Default time_from_start for trajectories. Used when the caller does not
+  // override (legacy simple_move path). motion_synth provides its own value
+  // via ArmGoalPose.motion_execution_time.
+  static constexpr double kDefaultArmTimeFromStart = 0.2;
+  double arm_time_from_start_{kDefaultArmTimeFromStart};
 
   float torso_goal_pose_{0.0f};
   float torso_current_pose_{0.0f};
@@ -116,7 +133,15 @@ private:
   double torso_default_pose_{0.0};
   std::vector<double> arm_default_pose_{0.0, -1.57, -1.57, 0.0};
 
-  bool init_sent_once_{false};
+  // Startup default-pose handshake. The default pose must not be published
+  // until the trajectory controller has actually connected to our command
+  // publisher; a trajectory sent before discovery completes is silently
+  // dropped (reliable but volatile QoS), which is why the arm sometimes never
+  // moved to the default pose at startup. Once the subscription is matched a
+  // single reliable publish is delivered (the protocol retransmits on loss),
+  // so one send after connection is enough.
+  bool init_done_{false};
+  bool external_goal_received_{false};
 
   // Parameter callback handle
   OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
@@ -191,11 +216,19 @@ private:
     std_msgs::msg::Float32MultiArray arm_msg; arm_msg.data = arm_current_pose_;
     pub_arm_current_pose_->publish(arm_msg);
 
-    if (!init_sent_once_) {
-      publish_default_pose();
-      init_sent_once_ = true;
-      RCLCPP_WARN(this->get_logger(), "arm_node.-> Sent default pose after first controller_state.");
-
+    if (!init_done_) {
+      if (external_goal_received_) {
+        // A real goal already took over; skip the startup default pose.
+        init_done_ = true;
+      } else if (pub_arm_goal_pose_->get_subscription_count() > 0) {
+        // Trajectory controller is connected now: a reliable publish will be
+        // delivered. (Before the match completes the sample would be dropped.)
+        publish_default_pose();
+        init_done_ = true;
+        RCLCPP_WARN(this->get_logger(),
+                    "arm_node.-> Sent default pose (controller connected).");
+      }
+      // else: controller not connected yet — wait for the next controller_state.
     }
   }
 
@@ -211,7 +244,7 @@ private:
     RCLCPP_INFO(this->get_logger(), "arm_node.->Received arm goal pose: [%f, %f, %f, %f]",
                  arm_goal_pose_[0], arm_goal_pose_[1], arm_goal_pose_[2], arm_goal_pose_[3]);
     msg_arm_received_ = true;
-    RCLCPP_INFO(this->get_logger(), "arm_node.->Received arm goal pose.");
+    external_goal_received_ = true;
     sendArmGoalTrajectory();
   }
 
@@ -220,6 +253,31 @@ private:
     torso_goal_pose_ = msg->data;
     msg_torso_received_ = true;
     RCLCPP_INFO(this->get_logger(), "arm_node.->Received torso goal pose.");
+  }
+
+  void motionPoseCallback(const pumas_interfaces::msg::MotionPose::SharedPtr msg)
+  {
+    torso_goal_pose_ = msg->joints.arm_lift_joint;
+    arm_goal_pose_.resize(4);
+    arm_goal_pose_[0] = msg->joints.arm_flex_joint;
+    arm_goal_pose_[1] = msg->joints.arm_roll_joint;
+    arm_goal_pose_[2] = msg->joints.wrist_flex_joint;
+    arm_goal_pose_[3] = msg->joints.wrist_roll_joint;
+
+    arm_time_from_start_ = (msg->motion_execution_time > 0.0f)
+        ? static_cast<double>(msg->motion_execution_time)
+        : kDefaultArmTimeFromStart;
+
+    msg_arm_received_   = true;
+    msg_torso_received_ = true;
+    external_goal_received_ = true;
+
+    RCLCPP_INFO(this->get_logger(),
+                "arm_node.->Received motion pose: lift=%.3f arm=[%.3f %.3f %.3f %.3f] time=%.3f s",
+                torso_goal_pose_, arm_goal_pose_[0], arm_goal_pose_[1],
+                arm_goal_pose_[2], arm_goal_pose_[3], arm_time_from_start_);
+
+    sendArmGoalTrajectory();
   }
 
   void timerCallback()
@@ -276,12 +334,16 @@ private:
     pt.positions[0] = static_cast<double>(torso_goal_pose_);  // arm_lift_joint
     pt.positions[1] = static_cast<double>(arm_goal_pose_[0]); // arm_flex_joint
     pt.positions[2] = static_cast<double>(arm_goal_pose_[1]); // arm_roll_joint
-    pt.positions[3] = static_cast<double>(arm_goal_pose_[2]); // wrist_flex_joint   
+    pt.positions[3] = static_cast<double>(arm_goal_pose_[2]); // wrist_flex_joint
     pt.positions[4] = static_cast<double>(arm_goal_pose_[3]); // wrist_roll_joint
-    pt.time_from_start = rclcpp::Duration::from_seconds(0.2); 
-  
+    pt.time_from_start = rclcpp::Duration::from_seconds(arm_time_from_start_);
+
     pub_arm_goal_pose_->publish(traj);
-  
+
+    // Reset to default after consuming so the override does not bleed into
+    // subsequent commands from other publishers.
+    arm_time_from_start_ = kDefaultArmTimeFromStart;
+
     msg_arm_received_   = false;
     msg_torso_received_ = false;
   

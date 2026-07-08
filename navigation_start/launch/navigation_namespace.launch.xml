@@ -1,6 +1,8 @@
 <launch>
 
   <!-- Arguments -->
+  <arg name="robot_name" default="$(env ROBOT_NAME)"/>
+  <arg name="use_online" default="False"/>
   <arg name="use_sim_time" default="false"/>
   <arg name="namespace" default="my_robot"/>
   <arg name="use_namespace" default="false"/>
@@ -17,7 +19,6 @@
   <arg name="cmd_vel_topic" default="/$(var namespace)/omni_base_controller/cmd_vel" if="$(var use_namespace)"/>
   <arg name="laser_scan_topic" default="/$(var namespace)/scan" if="$(var use_namespace)"/>
   <arg name="point_cloud_topic" default="/$(var namespace)/head_rgbd_sensor/depth_registered/rectified_points" if="$(var use_namespace)"/>
-  <arg name="point_cloud_topic2" default="/$(var namespace)/head_rgbd_sensor/depth_registered/rectified_points" if="$(var use_namespace)"/>
   <arg name="bumper_f_topic" default="/$(var namespace)/base_f_bumper_sensor" if="$(var use_namespace)"/>
   <arg name="base_link_name" default="/$(var namespace)/base_link" if="$(var use_namespace)"/>
   <arg name="odom_topic" default="/$(var namespace)/odom" if="$(var use_namespace)"/>
@@ -27,7 +28,6 @@
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel" unless="$(var use_namespace)"/>
   <arg name="laser_scan_topic" default="/scan" unless="$(var use_namespace)"/>
   <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/rectified_points" unless="$(var use_namespace)"/>
-  <arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points" unless="$(var use_namespace)"/>
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor" unless="$(var use_namespace)"/>
   <arg name="base_link_name" default="base_link" unless="$(var use_namespace)"/>
   <arg name="odom_topic" default="odom" unless="$(var use_namespace)"/>
@@ -36,9 +36,11 @@
   <arg name="use_lidar" default="True"/>
   <arg name="use_sonars" default="False"/>
   <arg name="use_point_cloud" default="True"/>
-  <arg name="use_point_cloud2" default="False"/>
   <arg name="use_bumper" default="False"/>
   <arg name="use_pot_fields" default="True"/>
+  <!-- Constant-speed path following (simple_move). Toggleable at runtime via param_rw. -->
+  <arg name="use_constant_speed" default="False"/>
+  <arg name="constant_speed" default="0.3"/>
 
   <arg name="cloud_downsampling" default="5"/>
   <arg name="lidar_downsampling" default="1"/>
@@ -51,7 +53,8 @@
   <arg name="laser_max_x" default="0.50"/>
   <arg name="laser_min_y" default="-0.25"/>
   <arg name="laser_max_y" default="0.25"/>
-  <arg name="laser_min_z" default="0.025"/>
+  <arg name="laser_min_z"
+     default="$(eval &quot;'0.022' if '$(var robot_name)' == 'hsrb' else '0.025'&quot;)"/>
   <arg name="laser_max_z" default="1.00"/>
   <arg name="cloud_min_x" default="0.30"/>
   <arg name="cloud_max_x" default="0.80"/>
@@ -144,7 +147,6 @@
     
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
-    <param name="point_cloud_topic2" value="$(var point_cloud_topic2)"/>
     <param name="static_map_server" value="/static_map_server/map"/>
     <param name="prohibition_map_server" value="/prohibition_map"/>
     
@@ -153,7 +155,6 @@
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_sonars" value="$(var use_sonars)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-    <param name="use_point_cloud2" value="$(var use_point_cloud2)"/>
     
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
     
@@ -199,6 +200,8 @@
     
     <param name="max_linear_speed" value="0.8"/>
     <param name="max_angular_speed" value="1.25"/>
+    <param name="use_constant_speed" value="$(var use_constant_speed)"/>
+    <param name="constant_speed" value="$(var constant_speed)"/>
 
     <param name="control_alpha" value="0.2"/>
     <param name="control_beta" value="0.8"/>
@@ -278,9 +281,14 @@
     
     <param name="patience" value="$(var mvn_pln_patience)"/>
     <param name="base_link_name" value="$(var base_link_name)"/>
-    
+    <param name="use_online" value="$(var use_online)"/>
+
     <remap from="/nav_control/goal" to="$(var goal_topic)"/>
   </node>
+
+  <arg name="arm_default_pose"
+  default="$(eval &quot;'[0.0, -1.57, -1.57, 0.0]' if '$(var robot_name)' == 'hsrc_ex'
+             else '[-0.16, -1.57, -1.57, 0.0]'&quot;)"/>
 
   <!-- Hardware Controller -->
   <node name="arm_controller"
@@ -290,7 +298,7 @@
         respawn="true">
         <param name="torso_default_pose" value="0.15"/>
         <!--arm_flex, arm_roll, wrist_flex, wrist_roll-->
-        <param name="arm_default_pose" value="[-0.26, -1.57, -1.57, 0.0]"/>
+        <param name="arm_default_pose" value="$(var arm_default_pose)"/>
   </node>
 
   <node name="head_controller"

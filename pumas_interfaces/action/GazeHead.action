@@ -1,0 +1,12 @@
+# Goal (motion_synth_end pose)
+string gaze_tf_name
+bool restore_head
+float32 restore_pan
+float32 restore_tilt
+---
+# Result
+bool success
+---
+# Feedback (gaze_node realtime ctrl)
+float32 pan
+float32 tilt

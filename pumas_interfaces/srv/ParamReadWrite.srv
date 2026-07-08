@@ -1,0 +1,8 @@
+string node_name
+string param_name
+string value # any const param value given by str
+bool write # if you set write, param will be overwritten
+---
+bool success
+string param_value  
+

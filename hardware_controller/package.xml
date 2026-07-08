@@ -21,11 +21,13 @@
   <depend>std_srvs</depend>
   <depend>action_msgs</depend>
   <depend>actionlib_msgs</depend>
+  <depend>rclcpp_action</depend>
   
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
 
   <depend>rcl_interfaces</depend>
+  <depend>pumas_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

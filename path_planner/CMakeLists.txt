@@ -15,8 +15,10 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 find_package(rcl_interfaces REQUIRED)
+find_package(pumas_interfaces REQUIRED)
 
 # C++ section
 # Create library from PathPlanner.cpp
@@ -44,12 +46,14 @@ target_link_libraries(path_planner_node
 )
 
 ament_target_dependencies(path_planner_node
-    rclcpp 
+    rclcpp
 
     std_msgs
-    sensor_msgs 
+    sensor_msgs
     geometry_msgs
     nav_msgs
+    visualization_msgs
+    pumas_interfaces
 )
 
 

@@ -1,99 +1,114 @@
+<?xml version="1.0"?>
 <launch>
-
   <!-- Arguments -->
+  <arg name="robot_name" default="$(env ROBOT_NAME)"/>
   <arg name="use_sim_time" default="false"/>
-
-  <arg name="static_map_file" default="$(find-pkg-share navigation_start)/maps/maps/wrs2020/map.yaml"/>
-  <arg name="prohibition_map_file" default="$(find-pkg-share navigation_start)/maps/prohibition_maps/wrs2020/map.yaml"/>
-
+  <arg name="map_name" default="rc26_3330"/>
+  <arg name="static_map_file" default="$(find-pkg-share navigation_start)/maps/maps/$(var map_name)/map.yaml"/>
+  <arg name="prohibition_map_file" default="$(find-pkg-share navigation_start)/maps/prohibition_maps/$(var map_name)/map.yaml"/>
   <arg name="odom_topic" default="/odom"/>
   <arg name="pose_topic" default="/pose"/>
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
-  <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/rectified_points"/>
-  <arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points"/>
+  <arg name="point_cloud_topic" default="/head_rgbd_sensor/reconsted/points"/>
+  <!--arg name="point_cloud_topic2" default="/head_rgbd_sensor/depth_registered/rectified_points"/-->
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor"/>
-
   <arg name="use_lidar" default="True"/>
   <arg name="use_sonars" default="False"/>
   <arg name="use_point_cloud" default="True"/>
-  <arg name="use_point_cloud2" default="False"/>
   <arg name="use_bumper" default="False"/>
   <arg name="use_pot_fields" default="True"/>
-
+  <!-- Constant-speed path following: when True, simple_move follows the path
+       at a fixed constant_speed [m/s] instead of the accel/cruise/deccel
+       profile. Can also be toggled at runtime via param_rw. -->
+  <arg name="use_constant_speed" default="False"/>
+  <arg name="constant_speed" default="0.3"/>
   <arg name="cloud_downsampling" default="5"/>
   <arg name="lidar_downsampling" default="1"/>
   <arg name="cloud_points_threshold" default="100"/>
   <arg name="lidar_points_threshold" default="20"/>
 
-  <arg name="mvn_pln_patience" default="True"/>
+  <arg name="mvn_pln_patience" default="False"/>
 
+  <arg name="use_online" default="False"/>
+  <arg name="memory_all_obstacles" default="False"/>
+
+  <arg name="disable_rear_path_plan" default="False"/>
+  <arg name="online_behind_clearance" default="1.0"/>
+  <!--A*失敗時に自機周囲をこの半径[m]だけ白(0)で塗って再計画(脱出)．後退の前段．0以下で無効-->
+  <arg name="escape_clear_radius" default="0.6"/>
+
+  <!--depth-->
   <arg name="laser_min_x" default="0.17"/>
-  <arg name="laser_max_x" default="0.50"/>
+  <arg name="laser_max_x" default="0.5"/>
+  <!--right/left side-->
   <arg name="laser_min_y" default="-0.25"/>
   <arg name="laser_max_y" default="0.25"/>
-  <arg name="laser_min_z" default="0.025"/>
-  <arg name="laser_max_z" default="1.00"/>
-  <arg name="cloud_min_x" default="0.30"/>
-  <arg name="cloud_max_x" default="0.80"/>
+  <!--height-->
+  <arg name="laser_min_z"
+     default="$(eval &quot;'0.022' if '$(var robot_name)' == 'hsrb' else '0.025'&quot;)"/>
+  <arg name="laser_max_z" default="1.0"/>
+  <!--depth-->
+  <arg name="cloud_min_x" default="0.40"/>
+  <arg name="cloud_max_x" default="0.70"/>
+  <!--right/left side-->
   <arg name="cloud_min_y" default="-0.30"/>
   <arg name="cloud_max_y" default="0.30"/>
-  <arg name="cloud_min_z" default="0.01"/>
-  <arg name="cloud_max_z" default="1.20"/>
+  <!--height-->
+  <arg name="cloud_min_z" default="0.1"/>
+  <arg name="cloud_max_z" default="1.0"/>
+
+  <!--near goal sentのしきい値-->
+  <arg name="proximity_criterion" default="0.2"/>
+
+  <!--collision_risk由来のabortを何回検知したらリカバリ(後退/検知箱縮小)を発動するか-->
+  <arg name="collision_recovery_trigger_count" default="3"/>
+
+  <!-- Static furniture obstacles (loaded into the prohibition layer at startup) -->
+  <arg name="add_static_obstacles" default="True"/>
+  <arg name="env_furniture_pkg" default="hma_env_manage2"/>
+  <arg name="env_furniture_file" default="env_furniture_$(var map_name)"/> <!--change your env_furniture-->
+  <arg name="move_head" default="True"/>
 
   <!-- Map servers -->
-  <node name="static_map_server" 
-        pkg="nav2_map_server" 
-        exec="map_server" 
-        output="screen"
-        respawn="true">
+  <node name="static_map_server" pkg="nav2_map_server" exec="map_server" output="screen" respawn="true">
     <param name="yaml_filename" value="$(var static_map_file)"/>
     <!-- Comment this remap if you are using not using default localisation -->
     <remap from="/map" to="/nav_map"/>
   </node>
-
-  <node name="prohibition_map_server" 
-        pkg="nav2_map_server" 
-        exec="map_server" 
-        output="screen"
-        respawn="true">
+  <node name="prohibition_map_server" pkg="nav2_map_server" exec="map_server" output="screen" respawn="true">
     <param name="yaml_filename" value="$(var prohibition_map_file)"/>
     <remap from="/map" to="/fixed_prohibition_layer_map"/>
   </node>
-
-  <node name="lifecycle_manager_map"
-        pkg="nav2_lifecycle_manager"
-        exec="lifecycle_manager"
-        output="screen"
-        respawn="true">
+  <node name="lifecycle_manager_map" pkg="nav2_lifecycle_manager" exec="lifecycle_manager" output="screen" respawn="true">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="autostart" value="true"/>
     <param name="node_names" value="['static_map_server', 'prohibition_map_server']"/>
   </node>
 
   <!-- Map Enhancer -->
-  <node name="map_enhancer" 
-        pkg="augment_gridmap_online" 
-        exec="augment_gridmap_online_node" 
-        output="screen"
-        respawn="true">
-
+  <node name="map_enhancer" pkg="augment_gridmap_online" exec="augment_gridmap_online_node" output="screen" respawn="true">
     <remap from="point_obstacle" to="/clicked_point"/>
     <param name="obstacle_radius" value="0.05"/>
     <param name="debug" value="True"/>
-
     <param name="input_map" value="/fixed_prohibition_layer_map"/>
+    <param name="map_name" value="$(var map_name)"/>
+
+    <param name="add_static_obstacles" value="$(var add_static_obstacles)"/>
+    <param name="furniture_pkg" value="$(var env_furniture_pkg)"/>
+    <param name="furniture_path" value="$(var env_furniture_file)"/>
     <remap from="/grid_map/get_augmented_map" to="/prohibition_map"/>
     <remap from="/grid_map/augmented_map" to="/prohibition_layer_map"/>
   </node>
 
   <!-- Localization  -->
+  <!-- KILL AMCL localization if necessary -->
+  <!--executable cmd="ros2 node kill amcl"/-->
   <!-- Start EMCL2 localization or your own navigation -->
-  <node name="emcl2"
+  <!--node name="emcl2"
         pkg="emcl2"
         exec="emcl2_node"
         output="log"
-        args="--ros-args --log-level WARN"
         respawn="true">
     <param name="num_particles" value="1000"/>
 
@@ -108,165 +123,138 @@
     <remap from="cmd_vel" to="$(var cmd_vel_topic)"/>
     <remap from="mcl_pose" to="$(var pose_topic)"/>
     <remap from="map" to="/map"/>
-  </node>
+  </node-->
 
   <!-- Map Augmenters -->
-  <node name="map_augmenter" 
-        pkg="map_augmenter" 
-        exec="map_augmenter_node" 
-        output="screen"
-        respawn="true">
+  <node name="map_augmenter" pkg="map_augmenter" exec="map_augmenter_node" output="screen" respawn="true">
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
-    <param name="point_cloud_topic2" value="$(var point_cloud_topic2)"/>
     <param name="static_map_server" value="/static_map_server/map"/>
     <param name="prohibition_map_server" value="/prohibition_map"/>
-    
     <remap from="point_obstacle" to="/clicked_point"/>
-
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_sonars" value="$(var use_sonars)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-    <param name="use_point_cloud2" value="$(var use_point_cloud2)"/>
-    
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
-    
-    <param name="decay_factor" value="20"/>    
-    <param name="inflation_radius" value="0.22"/>
-    <param name="cost_radius" value="0.25"/> 
-
-    <param name="use_online" value="False"/>
-
+    <param name="decay_factor" value="5"/>
+    <param name="inflation_radius" value="0.12"/>
+    <param name="cost_radius" value="0.17"/>
+    <param name="use_online" value="$(var use_online)"/>
+    <param name="memory_all_obstacles" value="$(var memory_all_obstacles)"/>
     <param name="laser_max_x" value="$(var laser_max_x)"/>
     <param name="laser_min_x" value="$(var laser_min_x)"/>
     <param name="laser_max_y" value="$(var laser_max_y)"/>
     <param name="laser_min_y" value="$(var laser_min_y)"/>
     <param name="laser_max_z" value="$(var laser_max_z)"/>
     <param name="laser_min_z" value="$(var laser_min_z)"/>
-
     <param name="cloud_max_x" value="$(var cloud_max_x)"/>
     <param name="cloud_min_x" value="$(var cloud_min_x)"/>
     <param name="cloud_max_y" value="$(var cloud_max_y)"/>
     <param name="cloud_min_y" value="$(var cloud_min_y)"/>
     <param name="cloud_max_z" value="$(var cloud_max_z)"/>
     <param name="cloud_min_z" value="$(var cloud_min_z)"/>
-
   </node>
 
   <!-- Path Planner -->
-  <node name="path_planner" 
-        pkg="path_planner" 
-        exec="path_planner_node" 
-        output="screen"
-        respawn="true">
+  <node name="path_planner" pkg="path_planner" exec="path_planner_node" output="screen" respawn="true">
     <param name="diagonal_paths" value="True"/>
+    <param name="use_online" value="$(var use_online)"/>
+    <param name="disable_rear_path_plan" value="$(var disable_rear_path_plan)"/>
+    <param name="online_behind_clearance" value="$(var online_behind_clearance)"/>
+    <param name="escape_clear_radius" value="$(var escape_clear_radius)"/>
   </node>
-
-  <node name="simple_move"  
-        pkg="simple_move"  
-        exec="simple_move_node"  
-        output="screen"
-        respawn="true">
+  <node name="simple_move" pkg="simple_move" exec="simple_move_node" output="screen" respawn="true">
     <param name="max_linear_speed" value="0.8"/>
     <param name="max_angular_speed" value="1.25"/>
-
+    <param name="use_constant_speed" value="$(var use_constant_speed)"/>
+    <param name="constant_speed" value="$(var constant_speed)"/>
     <param name="control_alpha" value="0.2"/>
     <param name="control_beta" value="0.8"/>
-
-    <param name="move_head" value="True"/>
+    <param name="move_head" value="$(var move_head)"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
-
     <remap from="/cmd_vel" to="$(var cmd_vel_topic)"/>
   </node>
 
   <!-- Potential Fields -->
-  <node name="potential_fields"  
-        pkg="potential_fields"  
-        exec="potential_fields_node"  
-        output="screen"
-        respawn="true">
+  <node name="potential_fields" pkg="potential_fields" exec="potential_fields_node" output="screen" respawn="true">
     <param name="debug" value="False"/>
-    <param name="show_image" value="True"/> 
+    <param name="show_image" value="True"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
-
     <param name="use_lidar" value="$(var use_lidar)"/>
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
-
     <param name="laser_max_x" value="$(var laser_max_x)"/>
     <param name="laser_min_x" value="$(var laser_min_x)"/>
     <param name="laser_max_y" value="$(var laser_max_y)"/>
     <param name="laser_min_y" value="$(var laser_min_y)"/>
     <param name="laser_max_z" value="$(var laser_max_z)"/>
     <param name="laser_min_z" value="$(var laser_min_z)"/>
-
     <param name="cloud_max_x" value="$(var cloud_max_x)"/>
     <param name="cloud_min_x" value="$(var cloud_min_x)"/>
     <param name="cloud_max_y" value="$(var cloud_max_y)"/>
     <param name="cloud_min_y" value="$(var cloud_min_y)"/>
     <param name="cloud_max_z" value="$(var cloud_max_z)"/>
     <param name="cloud_min_z" value="$(var cloud_min_z)"/>
-
     <param name="laser_pot_fields_d0" value="0.50"/>
-    <param name="laser_pot_fields_k_rej" value="0.40"/>
-
-    <param name="cloud_pot_fields_d0" value="0.80"/>
-    <param name="cloud_pot_fields_k_rej" value="0.20"/>
-
+    <param name="laser_pot_fields_k_rej" value="0.30"/>
+    <param name="cloud_pot_fields_d0" value="0.70"/>
+    <param name="cloud_pot_fields_k_rej" value="0.30"/>
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
     <param name="cloud_points_threshold" value="$(var cloud_points_threshold)"/>
     <param name="lidar_points_threshold" value="$(var lidar_points_threshold)"/>
-
     <param name="point_cloud_topic" value="$(var point_cloud_topic)"/>
     <param name="laser_scan_topic" value="$(var laser_scan_topic)"/>
-
     <remap from="/cmd_vel" to="$(var cmd_vel_topic)"/>
   </node>
 
-  <node name="publish_enable"
-        pkg="potential_fields"
-        exec="publish_enable.py"
-        output="screen"
-        respawn="true"/>
+  <node name="publish_enable" pkg="potential_fields" exec="publish_enable.py" output="screen" respawn="true"/>
 
   <!-- Motion Planner -->
-  <node name="mvn_pln"  
-        pkg="mvn_pln"  
-        exec="mvn_pln_node"  
-        output="screen"
-        respawn="true">
+  <node name="mvn_pln" pkg="mvn_pln" exec="mvn_pln_node" output="screen" respawn="true">
     <remap from="/nav_control/goal" to="/move_base_simple/goal"/>
     <param name="patience" value="$(var mvn_pln_patience)"/>
+    <param name="memory_all_obstacles" value="$(var memory_all_obstacles)"/>
+    <param name="proximity_criterion" value="$(var proximity_criterion)"/>
+    <param name="collision_recovery_trigger_count" value="$(var collision_recovery_trigger_count)"/>
+    <param name="use_online" value="$(var use_online)"/>
   </node>
+
+  <node pkg="motion_synth" exec="motion_synth_server.py" name="motion_synth_server" output="screen">
+  </node>
+
+  <node pkg="navigation_tools" exec="param_rw.py" name="dynamic_param_rw_server" output="screen">
+  </node>
+
+  <node pkg="navigation_tools" exec="pumas_viz_goal_bridge.py" name="pumas_viz_goal_bridge_node" output="screen" emulate_tty="true">
+  </node>
+
+  <node pkg="navigation_tools" exec="pot_fields_updator.py" name="pot_fields_updator" output="screen">
+    <param from="$(find-pkg-share navigation_tools)/config/$(env ROBOT_NAME hsrb)_pot_fields_updator.yaml"/>
+  </node>
+
+  <arg name="arm_default_pose"
+  default="$(eval &quot;'[0.0, -1.57, -1.57, 0.0]' if '$(var robot_name)' == 'hsrc_ex'
+             else '[-0.16, -1.57, -1.57, 0.0]'&quot;)"/>
 
   <!-- Hardware Controller -->
-  <node name="arm_controller"
-        pkg="hardware_controller"
-        exec="arm_node"
-        output="screen"
-        respawn="true">
-        <param name="torso_default_pose" value="0.15"/>
-        <!--arm_flex, arm_roll, wrist_flex, wrist_roll-->
-        <param name="arm_default_pose" value="[-0.26, -1.57, -1.57, 0.0]"/>
+  <node name="arm_controller" pkg="hardware_controller" exec="arm_node" output="screen" respawn="true">
+    <param name="torso_default_pose" value="0.1"/>
+    <!--arm_flex, arm_roll, wrist_flex, wrist_roll-->
+    <param name="arm_default_pose" value="$(var arm_default_pose)"/>
   </node>
-
-  <node name="head_controller"
-        pkg="hardware_controller"
-        exec="head_node"
-        output="screen"
-        respawn="true">
-        <param name="pan_min" value="-3.14" />
-        <param name="pan_max" value="1.74" />
-        <param name="tilt_min" value="-0.9" />
-        <param name="tilt_max" value="0.47" />
+  <node name="head_controller" pkg="hardware_controller" exec="head_node" output="screen" respawn="true">
+    <param name="pan_min" value="-3.14"/>
+    <param name="pan_max" value="1.74"/>
+    <param name="tilt_min" value="-0.7"/>
+    <param name="tilt_max" value="0.47"/>
+  </node>
+  <node name="gaze_controller" pkg="hardware_controller" exec="gaze_node" output="screen" respawn="true">
+    <param name="gaze_tf_name"   value="gaze_point"/>
+    <param name="base_link_name" value="base_footprint"/>
+    <param name="head_height"    value="1.1"/>
+    <param name="max_pan_vel"    value="1.0"/>
+    <param name="max_tilt_vel"   value="0.7"/>
   </node>
 
   <!-- RVIZ2 -->
-  <node name="rviz2"
-        pkg="rviz2"
-        exec="rviz2"
-        args="-d $(find-pkg-share navigation_start)/rviz/config.rviz
-              --ros-args --log-level rviz2:=warn"
-        output="screen"
-        />
-
+  <node name="rviz2" pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share navigation_start)/rviz/config.rviz               --ros-args --log-level rviz2:=warn" output="screen"/>
 </launch>

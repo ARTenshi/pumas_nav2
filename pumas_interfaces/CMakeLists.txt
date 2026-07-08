@@ -14,19 +14,31 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
-#set(msg_files
-#  "msg/CustomMessage.msg"
-#)
+set(msg_files
+  "msg/Joints.msg"
+  "msg/StartAndEndJoints.msg"
+  "msg/MotionPose.msg"
+)
 
 set(srv_files
   "srv/GetInflatedMap.srv"
+  "srv/ParamReadWrite.srv"
+  "srv/GetPlanWithVia.srv"
+)
+
+set(action_files
+  "action/MotionSynthesis.action"
+  "action/PumasNav.action"
+  "action/GazeHead.action"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-#  ${msg_files}
+  ${msg_files}
   ${srv_files}
-  DEPENDENCIES nav_msgs
+  ${action_files}
+  DEPENDENCIES nav_msgs geometry_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)

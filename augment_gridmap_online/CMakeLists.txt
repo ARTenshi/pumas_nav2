@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 
@@ -19,21 +20,38 @@ find_package(std_srvs REQUIRED)
 
 find_package(rcl_interfaces REQUIRED)
 
+find_package(yaml-cpp REQUIRED)
+
 # C++ section
-add_executable(augment_gridmap_online_node 
+add_executable(augment_gridmap_online_node
     src/augment_gridmap_online_node.cpp
+)
+
+target_include_directories(augment_gridmap_online_node PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 ament_target_dependencies(augment_gridmap_online_node
     rclcpp
 
+    ament_index_cpp
+
     geometry_msgs
     nav_msgs
     visualization_msgs
-    
+
     std_srvs
 
     rcl_interfaces
+)
+
+target_link_libraries(augment_gridmap_online_node
+    yaml-cpp
+)
+
+# Install public headers
+install(DIRECTORY include/
+    DESTINATION include
 )
 
 # Python section

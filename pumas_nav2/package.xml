@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pumas_nav2</name>
+  <version>0.0.0</version>
+  <description>
+    Metapackage that aggregates all packages of the Pumas Navigation2 system.
+    Build this single package to pull in the whole navigation stack.
+  </description>
+  <maintainer email="kobayashi.ryohei621@mail.kyutech.jp">ry0hei-kobayashi</maintainer>
+  <license>Apache 2.0 License</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Interfaces -->
+  <exec_depend>pumas_interfaces</exec_depend>
+
+  <!-- Core navigation packages -->
+  <exec_depend>augment_gridmap_online</exec_depend>
+  <exec_depend>hardware_controller</exec_depend>
+  <exec_depend>human_follower</exec_depend>
+  <exec_depend>map_augmenter</exec_depend>
+  <exec_depend>map_server_bypass</exec_depend>
+  <exec_depend>motion_synth</exec_depend>
+  <exec_depend>mvn_pln</exec_depend>
+  <exec_depend>navigation_start</exec_depend>
+  <exec_depend>navigation_tools</exec_depend>
+  <exec_depend>path_planner</exec_depend>
+  <exec_depend>potential_fields</exec_depend>
+  <exec_depend>simple_move</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
