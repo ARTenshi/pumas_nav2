@@ -9,6 +9,19 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <exec_depend>augment_gridmap_online</exec_depend>
+  <exec_depend>map_augmenter</exec_depend>
+  <exec_depend>path_planner</exec_depend>
+  <exec_depend>simple_move</exec_depend>
+  <exec_depend>potential_fields</exec_depend>
+  <exec_depend>mvn_pln</exec_depend>
+  <exec_depend>hardware_controller</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
