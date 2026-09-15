@@ -15,7 +15,7 @@
   <arg name="use_pot_fields" default="true"/>
 
   <group>
-      <push-ros-namespace namespace="hri"/>
+      <push_ros_namespace namespace="hri"/>
       <!-- Leg Finder -->
       <node name="leg_finder" 
             pkg="human_follower" 

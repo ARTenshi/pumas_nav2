@@ -253,11 +253,11 @@ private:
   void headStateCallback(
       const control_msgs::msg::JointTrajectoryControllerState::SharedPtr msg) {
     // expected: positions.size() >= 2  (0:pan, 1:tilt)
-    if (msg->actual.positions.size() >= 2) {
+    if (msg->feedback.positions.size() >= 2) {
       head_current_pose_[0] =
-          static_cast<float>(msg->actual.positions[0]); // pan
+          static_cast<float>(msg->feedback.positions[0]); // pan
       head_current_pose_[1] =
-          static_cast<float>(msg->actual.positions[1]); // tilt
+          static_cast<float>(msg->feedback.positions[1]); // tilt
 
       sensor_msgs::msg::JointState state_msg;
       state_msg.header.stamp = this->now();

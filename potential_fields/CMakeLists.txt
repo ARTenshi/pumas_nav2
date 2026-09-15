@@ -33,6 +33,7 @@ add_executable(potential_fields_node
 ament_target_dependencies(potential_fields_node
     rclcpp
 
+    std_msgs
     sensor_msgs 
     geometry_msgs
     nav_msgs
@@ -43,9 +44,10 @@ ament_target_dependencies(potential_fields_node
     tf2_eigen
 
     rcl_interfaces
-
-    OpenCV
 )
+
+target_include_directories(potential_fields_node PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(potential_fields_node ${OpenCV_LIBS})
 
 # Python section
 ament_python_install_package(${PROJECT_NAME})
