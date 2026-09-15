@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(rclpy REQUIRED)
 
 find_package(std_msgs REQUIRED)
@@ -34,6 +35,7 @@ add_executable(mvn_pln_node
 
 ament_target_dependencies(mvn_pln_node
     rclcpp
+    rclcpp_action
 
     std_msgs
     sensor_msgs 

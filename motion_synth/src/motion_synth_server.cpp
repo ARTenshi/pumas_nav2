@@ -17,11 +17,11 @@
 #include <pumas_interfaces/msg/motion_pose.hpp>
 #include <pumas_interfaces/msg/joints.hpp>
 
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/buffer.h>
-#include <tf2/exceptions.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2_ros/transform_listener.hpp>
+#include <tf2_ros/buffer.hpp>
+#include <tf2/exceptions.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
+#include <tf2/LinearMath/Matrix3x3.hpp>
 
 #include <algorithm>
 #include <array>

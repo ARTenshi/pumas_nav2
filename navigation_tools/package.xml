@@ -27,6 +27,10 @@
   <depend>rcl_interfaces</depend>
   <depend>pumas_interfaces</depend>
 
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>tf_transformations</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

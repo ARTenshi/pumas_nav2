@@ -46,7 +46,7 @@ ament_target_dependencies(augment_gridmap_online_node
 )
 
 target_link_libraries(augment_gridmap_online_node
-    yaml-cpp
+    yaml-cpp::yaml-cpp
 )
 
 # Install public headers
