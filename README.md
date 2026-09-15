@@ -51,13 +51,18 @@ git clone https://github.com/artenshi/pumas_nav2.git
 ```
 
 
-2. Install missing packages:
-
-e.g.
+2. Install missing packages (ROS 2 Jazzy on Ubuntu 24.04):
 
 ```bash
+cd ~/pumas_nav2_ws
 sudo apt update
-sudo apt install ros-humble-control-msgs libpcl-dev ros-humble-pcl-conversions ros-humble-pcl-ros
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+or install the external runtime dependencies by hand:
+
+```bash
+sudo apt install ros-jazzy-control-msgs ros-jazzy-nav2-map-server ros-jazzy-nav2-lifecycle-manager ros-jazzy-slam-toolbox
 ```
 
 3. Build the project:
