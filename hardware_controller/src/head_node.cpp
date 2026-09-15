@@ -169,9 +169,9 @@ private:
       const control_msgs::msg::JointTrajectoryControllerState::SharedPtr msg)
   {
     // expected: positions.size() >= 2  (0:pan, 1:tilt)
-    if (msg->actual.positions.size() >= 2) {
-      head_current_pose_[0] = static_cast<float>(msg->actual.positions[0]); // pan
-      head_current_pose_[1] = static_cast<float>(msg->actual.positions[1]); // tilt
+    if (msg->feedback.positions.size() >= 2) {
+      head_current_pose_[0] = static_cast<float>(msg->feedback.positions[0]); // pan
+      head_current_pose_[1] = static_cast<float>(msg->feedback.positions[1]); // tilt
 
       std_msgs::msg::Float32MultiArray arr;
       arr.data = head_current_pose_;

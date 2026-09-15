@@ -15,12 +15,15 @@
 #include "nav_msgs/srv/get_plan.hpp"
 
 // TF2 (Transform listener)
-#include "tf2_ros/transform_listener.h"
-#include "tf2_ros/buffer.h"
-#include "tf2/exceptions.h"
+#include "tf2_ros/transform_listener.hpp"
+#include "tf2_ros/buffer.hpp"
+#include "tf2/exceptions.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h> // for doTransform
-#include <tf2/utils.h> // for getYaw
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp> // for doTransform
+#include <tf2/utils.hpp> // for getYaw
+#include <tf2/time.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
+#include <tf2/LinearMath/Matrix3x3.hpp>
 
 // Action messages (used less directly in ROS 2; here for compatibility)
 #include "action_msgs/msg/goal_status.hpp"
