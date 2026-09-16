@@ -14,8 +14,8 @@
   <!-- Generic package-relative default; the actual site-specific map name
        should be overridden from the hsr_navigation wrapper launch file. -->
   <arg name="map_name" default="rc26_3330"/>
-  <arg name="static_map_file" default="$(find-pkg-share navigation_start)/maps/maps/$(var map_name)/map.yaml"/>
-  <arg name="prohibition_map_file" default="$(find-pkg-share navigation_start)/maps/prohibition_maps/$(var map_name)/map.yaml"/>
+  <arg name="static_map_file" default="$(find-pkg-share navigation_start)/maps/maps/$(var map_name)/$(var map_name).yaml"/>
+  <arg name="prohibition_map_file" default="$(find-pkg-share navigation_start)/maps/prohibition_maps/$(var map_name)/$(var map_name).yaml"/>
 
   <!-- Generic defaults. -->
   <arg name="odom_topic" default="/odom"/>
@@ -23,7 +23,8 @@
 
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
-  <arg name="point_cloud_topic" default="/head_rgbd_sensor/reconsted/points"/>
+  <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/points"/>
+  <!--arg name="point_cloud_topic" default="/head_rgbd_sensor/reconsted/points"/-->
   <arg name="depth_image_rect_topic" default="/camera/depth_registered/image_rect_raw"/>
   <arg name="depth_camera_info_topic" default="/camera/depth_registered/camera_info"/>
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor"/>
@@ -57,7 +58,7 @@
   <!-- Static furniture obstacles, loaded into the prohibition layer at startup.
        Leave furniture_pkg/furniture_path empty (default) to skip loading, or
        set furniture_yaml_file to an absolute path to bypass package lookup. -->
-  <arg name="add_static_obstacles" default="True"/>
+  <arg name="add_static_obstacles" default="False"/>
   <arg name="env_furniture_pkg" default="hma_env_manage2"/>
   <arg name="env_furniture_file" default="env_furniture_$(var map_name)"/> <!-- change your env_furniture -->
 
