@@ -157,8 +157,9 @@ public:
 
         //############
         // Map Augmenter main processing
-        get_first_maps();
-
+        // The first map requests are issued by service_check_timer_ once both map
+        // services have actually been discovered; sending them from here races with
+        // discovery and the dropped requests are never retried.
         processing_timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100), // 100 ms = 10 Hz
             std::bind(&MapAugmenterNode::map_augmenter_processing, this));
@@ -252,6 +253,10 @@ private:
     bool services_ready_ = false;
     bool is_static_map_ = false;
     bool is_prohibition_map_ = false;
+    // is_*_map_ are consumed and cleared by process_maps(), so keep a separate
+    // latch to know whether a map was ever received and whether to keep retrying.
+    bool static_map_received_ = false;
+    bool prohibition_map_received_ = false;
 
     // Main processing loop
     rclcpp::TimerBase::SharedPtr processing_timer_;
@@ -352,9 +357,24 @@ private:
                 bool is_prohibition_map = clt_get_prohibition_map_->wait_for_service(std::chrono::seconds(0));
                 if (is_static_map && is_prohibition_map)
                 {
-                    RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> All map services are now available.");
+                    if (!services_ready_)
+                        RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> All map services are now available.");
                     services_ready_ = true;
-                    service_check_timer_->cancel();
+
+                    // Keep this timer alive until both maps have actually been
+                    // received: a request sent while the server is still being
+                    // discovered is silently dropped and its future never completes.
+                    if (static_map_received_ && prohibition_map_received_)
+                    {
+                        service_check_timer_->cancel();
+                        return;
+                    }
+
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                                         "MapAugmenter.-> Requesting the initial maps (static: %s, prohibition: %s)...",
+                                         static_map_received_ ? "ok" : "pending",
+                                         prohibition_map_received_ ? "ok" : "pending");
+                    get_first_maps();
                 }
                 else
                 {
@@ -409,35 +429,41 @@ private:
 
     void get_first_maps() 
     {
-        rclcpp::sleep_for(std::chrono::seconds(1));
+        if (!static_map_received_)
+        {
+            auto static_map_req = std::make_shared<nav_msgs::srv::GetMap::Request>();
+            clt_get_static_map_->async_send_request(static_map_req,
+                [this](rclcpp::Client<nav_msgs::srv::GetMap>::SharedFuture future_static) {
+                    try {
+                        this->static_map_ = future_static.get()->map;
+                        is_static_map_ = true;
+                        static_map_received_ = true;
+                        RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got static map with size %d x %d", 
+                                    static_map_.info.width, static_map_.info.height);
+                        process_maps();
+                    } catch (const std::exception &e) {
+                        RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Failed to get static map: %s", e.what());
+                    }
+                });
+        }
 
-        auto static_map_req = std::make_shared<nav_msgs::srv::GetMap::Request>();
-        clt_get_static_map_->async_send_request(static_map_req,
-            [this](rclcpp::Client<nav_msgs::srv::GetMap>::SharedFuture future_static) {
-                try {
-                    this->static_map_ = future_static.get()->map;
-                    is_static_map_ = true;
-                    RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got static map with size %d x %d", 
-                                static_map_.info.width, static_map_.info.height);
-                    process_maps();
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Failed to get static map: %s", e.what());
-                }
-            });
-
-        auto prohibition_map_req = std::make_shared<nav_msgs::srv::GetMap::Request>();
-        clt_get_prohibition_map_->async_send_request(prohibition_map_req,
-            [this](rclcpp::Client<nav_msgs::srv::GetMap>::SharedFuture future_ptohibition) {
-                try {
-                    this->prohibition_map_ = future_ptohibition.get()->map;
-                    is_prohibition_map_ = true;
-                    RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got prohibition map with size %d x %d", 
-                                prohibition_map_.info.width, prohibition_map_.info.height);
-                    process_maps();
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Failed to get prohibition map: %s", e.what());
-                }
-            });
+        if (!prohibition_map_received_)
+        {
+            auto prohibition_map_req = std::make_shared<nav_msgs::srv::GetMap::Request>();
+            clt_get_prohibition_map_->async_send_request(prohibition_map_req,
+                [this](rclcpp::Client<nav_msgs::srv::GetMap>::SharedFuture future_ptohibition) {
+                    try {
+                        this->prohibition_map_ = future_ptohibition.get()->map;
+                        is_prohibition_map_ = true;
+                        prohibition_map_received_ = true;
+                        RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got prohibition map with size %d x %d", 
+                                    prohibition_map_.info.width, prohibition_map_.info.height);
+                        process_maps();
+                    } catch (const std::exception &e) {
+                        RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Failed to get prohibition map: %s", e.what());
+                    }
+                });
+        }
     }
 
     void process_maps()
@@ -540,7 +566,9 @@ private:
     {
         if (a.info.width != b.info.width || a.info.height != b.info.height)
         {
-            RCLCPP_DEBUG(this->get_logger(), "MapAugmenter.-> WARNING!!! Cannot merge maps of different sizes!");
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                                 "MapAugmenter.-> Cannot merge maps of different sizes! (%dx%d vs %dx%d)",
+                                 a.info.width, a.info.height, b.info.width, b.info.height);
             return a;
         }
 
@@ -789,6 +817,7 @@ private:
                 try {
                     this->static_map_ = future_static.get()->map;
                     is_static_map_ = true;
+                    static_map_received_ = true;
                     RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got static map with size %d x %d", 
                                 static_map_.info.width, static_map_.info.height);
                     process_maps();
@@ -803,6 +832,7 @@ private:
                 try {
                     this->prohibition_map_ = future_ptohibition.get()->map;
                     is_prohibition_map_ = true;
+                    prohibition_map_received_ = true;
                     RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got prohibition map with size %d x %d", 
                                 prohibition_map_.info.width, prohibition_map_.info.height);
                     process_maps();
@@ -833,7 +863,9 @@ private:
     {
         if (!services_ready_)
         {
-            RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Services not ready. Cannot handle static map request.");
+            RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                                  "MapAugmenter.-> Services not ready. Cannot handle augmented map request.");
+            response->map = augmented_map_;
             return;
         }
 
@@ -849,6 +881,7 @@ private:
                     try {
                         this->static_map_ = future_static.get()->map;
                         is_static_map_ = true;
+                        static_map_received_ = true;
                         //RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got static map with size %d x %d", 
                         //            static_map_.info.width, static_map_.info.height);
                         process_maps();
@@ -863,6 +896,7 @@ private:
                     try {
                         this->prohibition_map_ = future_ptohibition.get()->map;
                         is_prohibition_map_ = true;
+                        prohibition_map_received_ = true;
                         //RCLCPP_INFO(this->get_logger(), "MapAugmenter.-> Got prohibition map with size %d x %d", 
                         //            prohibition_map_.info.width, prohibition_map_.info.height);
                         process_maps();
@@ -876,7 +910,10 @@ private:
             (use_cloud_  && !obstacles_map_with_cloud())  ||
             (use_cloud2_ && !obstacles_map_with_cloud2()))
         {
-            RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Failed to add obstacles with sensors.");
+            RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                                  "MapAugmenter.-> Failed to add obstacles with sensors.");
+            // Fall back on the last good map instead of answering with an empty grid.
+            response->map = augmented_map_;
             return;
         }
 
@@ -929,7 +966,8 @@ private:
     {
         if (!services_ready_)
         {
-            RCLCPP_ERROR(this->get_logger(), "MapAugmenter.-> Services not ready. Cannot handle static map request.");
+            RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                                  "MapAugmenter.-> Map services not ready yet.");
             return;
         }
 
@@ -938,6 +976,13 @@ private:
         if (++counter > 10)
         {
             counter = 0;
+
+            if (static_map_.data.empty())
+            {
+                RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                                     "MapAugmenter.-> Static map is still empty. Not publishing the augmented map.");
+                return;
+            }
 
             are_there_obstacles_ = decay_map_and_check_if_obstacles(obstacles_map_, decay_factor_);
             obstacles_inflated_map_ = inflate_map(obstacles_map_, inflation_radius_);

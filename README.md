@@ -103,6 +103,21 @@ e.g.
 or
 [EMCL](https://github.com/CIT-Autonomous-Robot-Lab/emcl2_ros2)
 
+#### On the HSR (hsr-jazzy-docker)
+
+The HSR brings up its own localisation (`laser_2d_localizer` + `pose_integrator`), which already
+publishes `map -> odom`, so `navigation.launch.xml` starts no localisation of its own and simply
+rides on that TF. `emcl2` is not installed in the image and is not needed here.
+
+If you do want to use `emcl2` instead, note that it is not released to the ROS index (no rosdep
+rule, no `ros-jazzy-emcl2` package), so it has to be built from source, and the HSR localisation
+must be stopped first: two publishers of `map -> odom` corrupt the TF tree and make the HSR's
+`map_merger` fail with TF extrapolation errors.
+
+When running against the simulator, pass `use_sim_time:=true`. It is applied to every node in the
+launch file; running part of the stack on the wall clock while TF carries `/clock` timestamps is
+what produces "Lookup would require extrapolation" and makes RViz drop messages.
+
 ### Launch
 
 ```bash

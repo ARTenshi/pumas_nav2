@@ -39,6 +39,11 @@
   <arg name="cloud_min_z" default="0.01"/>
   <arg name="cloud_max_z" default="1.20"/>
 
+  <!-- Apply use_sim_time to every node declared below (rviz2 included).
+       Without this only the lifecycle manager ran on /clock while the rest of
+       the stack used the wall clock, which broke every TF lookup. -->
+  <set_parameter name="use_sim_time" value="$(var use_sim_time)"/>
+
   <!-- Map servers -->
   <node name="static_map_server" 
         pkg="nav2_map_server" 
@@ -46,8 +51,9 @@
         output="screen"
         respawn="true">
     <param name="yaml_filename" value="$(var static_map_file)"/>
-    <!-- Comment this remap if you are using not using default localisation -->
-    <remap from="/map" to="/nav_map"/>
+    <!-- Uncomment this remap only if you run the default localisation (emcl2),
+         which subscribes to /map itself. Otherwise nothing publishes /map. -->
+    <!-- <remap from="/map" to="/nav_map"/> -->
   </node>
 
   <node name="prohibition_map_server" 
@@ -64,7 +70,6 @@
         exec="lifecycle_manager"
         output="screen"
         respawn="true">
-    <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="autostart" value="true"/>
     <param name="node_names" value="['static_map_server', 'prohibition_map_server']"/>
   </node>
@@ -87,27 +92,6 @@
 
   <!-- Localization  -->
   <!-- Start EMCL2 localization or your own navigation -->
-  <node name="emcl2"
-        pkg="emcl2"
-        exec="emcl2_node"
-        output="log"
-        args="--ros-args --log-level WARN"
-        respawn="true">
-    <param name="num_particles" value="1000"/>
-
-    <param name="odom_frame_id" value="odom"/> 
-    <param name="base_frame_id" value="base_link"/>
-    <param name="footprint_frame_id" value="base_footprint"/>
-    <param name="global_frame_id" value="map"/>
-
-    <remap from="scan" to="$(var laser_scan_topic)"/>
-    <remap from="local_costmap/scan" to="$(var laser_scan_topic)"/>
-    <remap from="odom" to="$(var odom_topic)"/>
-    <remap from="cmd_vel" to="$(var cmd_vel_topic)"/>
-    <remap from="mcl_pose" to="$(var pose_topic)"/>
-    <remap from="map" to="/map"/>
-  </node>
-
   <!-- Map Augmenters -->
   <node name="map_augmenter" 
         pkg="map_augmenter" 
