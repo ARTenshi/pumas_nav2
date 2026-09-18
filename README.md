@@ -202,6 +202,10 @@ New features:
 
 * MAPF (Multi-agent Pathfinding)
 
+## Safety Notice and Disclaimer
+
+Before using this software, especially with physical robots or other hardware, please read the SAFETY.md [SAFETY.md].
+
 # Authors
 
 * **Luis Contreras** - [QibiTech Inc.](https://qibitech.com) / [TID Professional University](https://www.tid.ac.jp/contents/special-interview/2007/)
