@@ -204,7 +204,7 @@ New features:
 
 ## Safety Notice and Disclaimer
 
-Before using this software, especially with physical robots or other hardware, please read the [SAFETY.md].
+Before using this software, especially with physical robots or other hardware, please read the [Safety Guide](Safety.md).
 
 # Authors
 
