@@ -23,8 +23,8 @@
 
   <arg name="cmd_vel_topic" default="/omni_base_controller/cmd_vel"/>
   <arg name="laser_scan_topic" default="/scan"/>
-  <arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/points"/>
-  <!--arg name="point_cloud_topic" default="/head_rgbd_sensor/reconsted/points"/-->
+  <!--arg name="point_cloud_topic" default="/head_rgbd_sensor/depth_registered/points"/-->
+  <arg name="point_cloud_topic" default="/hma_pcl_reconst/depth_registered/points"/>
   <arg name="depth_image_rect_topic" default="/camera/depth_registered/image_rect_raw"/>
   <arg name="depth_camera_info_topic" default="/camera/depth_registered/camera_info"/>
   <arg name="bumper_f_topic" default="/base_f_bumper_sensor"/>
@@ -34,6 +34,9 @@
   <arg name="use_point_cloud" default="True"/>
   <arg name="use_bumper" default="False"/>
   <arg name="use_pot_fields" default="True"/>
+  <!-- OpenCV window of the potential_fields cloud mask (debug only). imshow runs in
+       the cloud callback thread and can stall it, starving the node of clouds. -->
+  <arg name="pot_fields_show_image" default="False"/>
   <arg name="move_head" default="True"/>
 
   <!-- Constant-speed path following: when True, simple_move follows the path
@@ -59,7 +62,7 @@
        Leave furniture_pkg/furniture_path empty (default) to skip loading, or
        set furniture_yaml_file to an absolute path to bypass package lookup. -->
   <arg name="add_static_obstacles" default="False"/>
-  <arg name="env_furniture_pkg" default="hma_env_manage2"/>
+  <arg name="env_furniture_pkg" default="ema_env_manage2"/>
   <arg name="env_furniture_file" default="env_furniture_$(var map_name)"/> <!-- change your env_furniture -->
 
   <!-- Online/SLAM replanning support (path_planner + map_augmenter): treats
@@ -128,6 +131,9 @@
   <arg name="lidar_downsampling" default="1"/>
   <arg name="cloud_points_threshold" default="100"/>
   <arg name="lidar_points_threshold" default="20"/>
+  <!-- [s] How long map_augmenter waits for the first cloud after navigation starts.
+       hma_pcl_reconst2 only starts its image pipeline once a subscriber appears. -->
+  <arg name="cloud_wait_timeout" default="2.0"/>
 
   <arg name="laser_min_x" default="0.17"/>
   <arg name="laser_max_x" default="0.5"/>
@@ -248,6 +254,7 @@
     <param name="use_point_cloud" value="$(var use_point_cloud)"/>
 
     <param name="cloud_downsampling" value="$(var cloud_downsampling)"/>
+    <param name="cloud_wait_timeout" value="$(var cloud_wait_timeout)"/>
 
     <param name="decay_factor" value="5"/>
     <param name="inflation_radius" value="0.12"/>
@@ -321,7 +328,7 @@
         output="screen"
         respawn="true">
     <param name="debug" value="False"/>
-    <param name="show_image" value="True"/>
+    <param name="show_image" value="$(var pot_fields_show_image)"/>
     <param name="use_pot_fields" value="$(var use_pot_fields)"/>
 
     <param name="use_lidar" value="$(var use_lidar)"/>
