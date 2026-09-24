@@ -31,6 +31,17 @@ year		= {2025}
 }
 ```
 
+The original system was developed by Luis Contreras and Marco Negrete, while a part of its ROS 2 implementation and continued development for RoboCup by Ryohei Kobayashi since 2024; please also cite:
+
+```
+@article{kobayashi:2025,
+author 		= {Ryohei Kobayashi and Kosei Isomoto and Kosei Yamao and Soma Fumoto and Koshun Arimura and Naoki Yamaguchi and Akinobu Mizutani and Tomoya Shiba and Kouki Kimizuka and Yuta Ohno and Ryo Terashima and Hiromasa Yamaguchi and Tomoaki Fujino and Ryoga Maruno and Wataru Yoshimura and Kazuhito Mine and Tang Phu Thien Nhan and Yuga Yano and Yuichiro Tanaka and Takeshi Nishida and Takashi Morie and Hakaru Tamukoh},
+title 		= {{Hibikino-Musashi@Home 2025 Team Description Paper}},
+journal		= {{arXiv preprint arXiv:2511.20180}},
+year		= {2025}
+}
+```
+
 # Setup
 
 1. Create an env of your choice.
@@ -185,6 +196,10 @@ Similar to our [ROS1](https://github.com/ARTenshi/robot_navigation) version:
 New features:
 
 * MAPF (Multi-agent Pathfinding)
+
+## Safety Notice and Disclaimer
+
+Before using this software, especially with physical robots or other hardware, please read the [Safety Guide](SAFETY.md).
 
 # Authors
 
